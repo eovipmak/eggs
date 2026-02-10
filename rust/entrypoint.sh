@@ -40,7 +40,7 @@ fi
 export LD_LIBRARY_PATH=$(pwd)/RustDedicated_Data/Plugins/x86_64:$(pwd)
 
 # Set RCON environment variables for wrapper.js
-export RCON_PORT=${SERVER_PORT_2}
+export RCON_PORT=${SERVER_PORT_3}
 export RCON_PASS=${RCON_PASS}
 # Run the Server
 node /wrapper.js "${MODIFIED_STARTUP}"
