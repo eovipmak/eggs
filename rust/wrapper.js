@@ -20,6 +20,12 @@ if (startupCmd.length < 1) {
 	process.exit();
 }
 
+// Log environment variables for debugging
+console.log("=== RCON Configuration ===");
+console.log("RCON_PORT: " + (process.env.RCON_PORT || "NOT SET"));
+console.log("RCON_PASS: " + (process.env.RCON_PASS ? "***configured (" + process.env.RCON_PASS.length + " chars)***" : "NOT SET"));
+console.log("==========================");
+
 const seenPercentage = {};
 
 function filter(data) {
@@ -87,8 +93,12 @@ var poll = function () {
 	
 	// Log connection info on first attempt
 	if (pollAttempts === 0) {
-		console.log("Attempting to connect to RCON at ws://" + serverHostname + ":" + serverPort);
-		console.log("Using RCON password: " + (serverPassword ? "***configured***" : "NOT SET - CHECK CONFIG!"));
+		console.log("=== RCON Connection Attempt ===");
+		console.log("Hostname: " + serverHostname);
+		console.log("Port: " + (serverPort || "NOT SET"));
+		console.log("Password: " + (serverPassword ? "***configured (" + serverPassword.length + " chars)***" : "NOT SET - CHECK CONFIG!"));
+		console.log("Full WebSocket URL: ws://" + serverHostname + ":" + serverPort + "/" + (serverPassword ? "***" : "EMPTY"));
+		console.log("===============================");
 	}
 	
 	var WebSocket = require("ws");
@@ -135,6 +145,11 @@ var poll = function () {
 	ws.on("error", function (err) {
 		waiting = true;
 		pollAttempts++;
+		
+		// Log detailed error on first few attempts
+		if (pollAttempts <= 3) {
+			console.log("RCON Connection Error (attempt " + pollAttempts + "): " + err.message);
+		}
 		
 		// Only show message every 3rd attempt (every 15 seconds) to reduce spam
 		if (pollAttempts === 1) {
