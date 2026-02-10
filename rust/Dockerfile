@@ -11,12 +11,8 @@ RUN			dpkg --add-architecture i386 \
 			&& apt install -y lib32gcc-s1 lib32stdc++6 unzip curl iproute2 tzdata libgdiplus libsdl2-2.0-0:i386 \
 			&& curl -sL https://deb.nodesource.com/setup_18.x | bash - \
 			&& apt install -y nodejs \
-			&& useradd -d /home/container -m container \
-			&& mkdir -p /home/container \
-			&& cd /home/container \
-			&& npm init -y \
-			&& npm install ws \
-			&& chown -R container:container /home/container
+			&& npm install -g ws \
+			&& useradd -d /home/container -m container
 
 USER 		container
 ENV  		USER=container HOME=/home/container
