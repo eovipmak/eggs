@@ -20,12 +20,6 @@ if (startupCmd.length < 1) {
 	process.exit();
 }
 
-// Log environment variables for debugging
-console.log("=== RCON Configuration ===");
-console.log("RCON_PORT: " + (process.env.RCON_PORT || "NOT SET"));
-console.log("RCON_PASS: " + (process.env.RCON_PASS ? "***configured (" + process.env.RCON_PASS.length + " chars)***" : "NOT SET"));
-console.log("==========================");
-
 const seenPercentage = {};
 
 function filter(data) {
@@ -41,7 +35,7 @@ function filter(data) {
 }
 
 var exec = require("child_process").exec;
-console.log("Starting Rust server... Please wait, this process may take 5-10 minutes.");
+console.log("Starting Rust...");
 
 var exited = false;
 const gameProcess = exec(startupCmd);
@@ -76,7 +70,6 @@ process.on('exit', function (code) {
 });
 
 var waiting = true;
-var pollAttempts = 0;
 var poll = function () {
 	function createPacket(command) {
 		var packet = {
@@ -90,25 +83,12 @@ var poll = function () {
 	var serverHostname = "127.0.0.1";
 	var serverPort = process.env.RCON_PORT;
 	var serverPassword = process.env.RCON_PASS;
-	
-	// Log connection info on first attempt
-	if (pollAttempts === 0) {
-		console.log("=== RCON Connection Attempt ===");
-		console.log("Hostname: " + serverHostname);
-		console.log("Port: " + (serverPort || "NOT SET"));
-		console.log("Password: " + (serverPassword ? "***configured (" + serverPassword.length + " chars)***" : "NOT SET - CHECK CONFIG!"));
-		console.log("Full WebSocket URL: ws://" + serverHostname + ":" + serverPort + "/" + (serverPassword ? "***" : "EMPTY"));
-		console.log("===============================");
-	}
-	
 	var WebSocket = require("ws");
 	var ws = new WebSocket("ws://" + serverHostname + ":" + serverPort + "/" + serverPassword);
 
 	ws.on("open", function open() {
-		var waitTime = pollAttempts > 0 ? " (waited ~" + Math.floor(pollAttempts * 5 / 60) + " minutes)" : "";
-		console.log("✓ Server is now online and ready! RCON connected successfully." + waitTime);
+		console.log("Connected to RCON. Generating the map now. Please wait until the server status switches to \"Running\".");
 		waiting = false;
-		pollAttempts = 0;
 
 		// Hack to fix broken console output
 		ws.send(createPacket('status'));
@@ -144,21 +124,7 @@ var poll = function () {
 
 	ws.on("error", function (err) {
 		waiting = true;
-		pollAttempts++;
-		
-		// Log detailed error on first few attempts
-		if (pollAttempts <= 3) {
-			console.log("RCON Connection Error (attempt " + pollAttempts + "): " + err.message);
-		}
-		
-		// Only show message every 3rd attempt (every 15 seconds) to reduce spam
-		if (pollAttempts === 1) {
-			console.log("Server is starting up, waiting for RCON to become available...");
-			console.log("This typically takes 2-5 minutes. Please be patient.");
-		} else if (pollAttempts % 3 === 0) {
-			console.log("Still waiting for RCON... (attempt " + pollAttempts + ", elapsed: ~" + Math.floor(pollAttempts * 5 / 60) + " min)");
-		}
-		
+		console.log("Waiting for RCON to come up...");
 		setTimeout(poll, 5000);
 	});
 
