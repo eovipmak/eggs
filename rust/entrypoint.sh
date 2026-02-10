@@ -45,4 +45,4 @@ export RCON_PASS=${RCON_PASS}
 export RCON_IP="localhost"
 
 # Run the Server
-node /wrapper.js "${MODIFIED_STARTUP}"
+node /home/container/wrapper.js "${MODIFIED_STARTUP}"
