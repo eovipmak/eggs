@@ -22,6 +22,6 @@ ENV  		USER=container HOME=/home/container NODE_PATH=/opt/node_modules
 WORKDIR 	/home/container
 
 COPY 		./entrypoint.sh /entrypoint.sh
-COPY 		./wrapper.js /home/container/wrapper.js
+COPY 		./wrapper.js /wrapper.js
 
 CMD			[ "/bin/bash", "/entrypoint.sh" ]

@@ -35,7 +35,7 @@ function filter(data) {
 }
 
 var exec = require("child_process").exec;
-console.log("Starting Rust...");
+console.log("Starting Rust server... Please wait, this process may take 5-10 minutes.");
 
 var exited = false;
 const gameProcess = exec(startupCmd);
@@ -70,6 +70,7 @@ process.on('exit', function (code) {
 });
 
 var waiting = true;
+var pollAttempts = 0;
 var poll = function () {
 	function createPacket(command) {
 		var packet = {
@@ -80,15 +81,24 @@ var poll = function () {
 		return JSON.stringify(packet);
 	}
 
-	var serverHostname = process.env.RCON_IP ? process.env.RCON_IP : "localhost";
+	var serverHostname = "localhost";
 	var serverPort = process.env.RCON_PORT;
 	var serverPassword = process.env.RCON_PASS;
+	
+	// Log connection info on first attempt
+	if (pollAttempts === 0) {
+		console.log("Attempting to connect to RCON at ws://" + serverHostname + ":" + serverPort);
+		console.log("Using RCON password: " + (serverPassword ? "***configured***" : "NOT SET - CHECK CONFIG!"));
+	}
+	
 	var WebSocket = require("ws");
 	var ws = new WebSocket("ws://" + serverHostname + ":" + serverPort + "/" + serverPassword);
 
 	ws.on("open", function open() {
-		console.log("Connected to RCON. Generating the map now. Please wait until the server status switches to \"Running\".");
+		var waitTime = pollAttempts > 0 ? " (waited ~" + Math.floor(pollAttempts * 5 / 60) + " minutes)" : "";
+		console.log("✓ Server is now online and ready! RCON connected successfully." + waitTime);
 		waiting = false;
+		pollAttempts = 0;
 
 		// Hack to fix broken console output
 		ws.send(createPacket('status'));
@@ -124,7 +134,16 @@ var poll = function () {
 
 	ws.on("error", function (err) {
 		waiting = true;
-		console.log("Waiting for RCON to come up...");
+		pollAttempts++;
+		
+		// Only show message every 3rd attempt (every 15 seconds) to reduce spam
+		if (pollAttempts === 1) {
+			console.log("Server is starting up, waiting for RCON to become available...");
+			console.log("This typically takes 2-5 minutes. Please be patient.");
+		} else if (pollAttempts % 3 === 0) {
+			console.log("Still waiting for RCON... (attempt " + pollAttempts + ", elapsed: ~" + Math.floor(pollAttempts * 5 / 60) + " min)");
+		}
+		
 		setTimeout(poll, 5000);
 	});
 
