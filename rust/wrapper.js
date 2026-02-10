@@ -87,7 +87,7 @@ var poll = function () {
 		return JSON.stringify(packet);
 	}
 
-	var serverHostname = "localhost";
+	var serverHostname = "127.0.0.1";
 	var serverPort = process.env.RCON_PORT;
 	var serverPassword = process.env.RCON_PASS;
 	
